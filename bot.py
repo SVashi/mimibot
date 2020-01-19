@@ -4,6 +4,9 @@ from random import randint
 
 client = commands.Bot(command_prefix = '!')
 
+#IMPORTANT: Set channel id to channel bot is running in
+c1 = 625914651582136323
+
 #intialize queues
 q1 = []
 ready1 = False
@@ -12,14 +15,15 @@ ready1 = False
 #host placeholder
 host = 'blank'
 
-#set channel ids
-c1 = 625914651582136323
+#randomNum gen
+num = randint(1000, 9999)
 
 
 @client.event
 async def on_ready():
 	print('Bot is ready')
 
+#User can set up a raid with !setRaid raidName
 @client.command()
 async def setRaid(ctx, *, raidName):
 	global ready1
@@ -32,6 +36,7 @@ async def setRaid(ctx, *, raidName):
 			host = ctx.author
 			await ctx.send(f'Creating raid: {raidName} hosted by {ctx.author.mention}!')
 
+#Users will queue for raids by typing !queue, the bot will sort them into the right queue, even across different channels
 @client.command()
 async def queue(ctx):
 	if ctx.message.channel.id == c1:
@@ -41,13 +46,15 @@ async def queue(ctx):
 			q1.append(ctx.author)
 			await ctx.send(f'User {ctx.author.mention} has been queued!')
 
-
+#Host can start the raid to select 3 people and the bot generates a code for them from 1000 to 9999
 @client.command()
 async def startRaid(ctx):
-	if ctx.message.channel.id == c1:
-		if (len(q1) == 0):
-			await ctx.send(f'Error: no users in queue!')
-		else:
+	if ctx.author == host:
+		if ctx.message.channel.id == c1:
+			if (len(q1) == 0):
+				await ctx.send(f'Error: no users in queue!')
+			else:
+				global num
 				num = randint(1000,9999)
 				if(len(q1) == 1):
 					u1 = q1.pop(0)
@@ -70,19 +77,20 @@ async def startRaid(ctx):
 					await u2.send(num)
 					await u3.send(num)
 					await host.send(num)
-
+#Host can grab an extra player if necessary with same link code
 @client.command()
 async def extra(ctx):
+	global num
 	if ctx.message.channel.id == c1:
 		if (len(q1) == 0):
 			await ctx.send(f'Error: no users in queue!')
 		else:
-				num = randint(1000,9999)
 				u1 = q1.pop(0)
 				await ctx.send(f'{u1.mention} Check your DMs for the raid code!')
 				await u1.send(num)
 				await host.send(num)
 
+#Host can end raid
 @client.command()
 async def endRaid(ctx):
 	if ctx.author == host:
